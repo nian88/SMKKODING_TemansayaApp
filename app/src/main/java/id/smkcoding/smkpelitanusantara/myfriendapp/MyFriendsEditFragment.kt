@@ -7,14 +7,13 @@ import android.view.ViewGroup
 import android.widget.ArrayAdapter
 import android.widget.Toast
 import androidx.fragment.app.Fragment
-
 import kotlinx.android.synthetic.*
-import kotlinx.android.synthetic.main.my_friends_add_fragment.*
+import kotlinx.android.synthetic.main.my_friends_edit_fragment.*
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.launch
 
-class MyFriendsAddFragment : Fragment() {
+class MyFriendsEditFragment : Fragment() {
     private var db: AppDatabase? = null
     private var myFriendDao: MyFriendDao? = null
     private var namaInput : String = ""
@@ -23,20 +22,30 @@ class MyFriendsAddFragment : Fragment() {
     private var alamatInput : String = ""
     private var genderInput : String = ""
 
+
     companion object {
-        fun newInstance(): MyFriendsAddFragment {
-            return MyFriendsAddFragment()
+        fun newInstance(): MyFriendsEditFragment {
+            return MyFriendsEditFragment()
         }
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
-        return inflater.inflate(R.layout.my_friends_add_fragment, container, false)
+        return inflater.inflate(R.layout.my_friends_edit_fragment, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         initView()
         initLocalDB()
+        edtName.setText(arguments!!.getString("nama"))
+        edtTelp.setText(arguments!!.getString("telp"))
+        edtEmail.setText(arguments!!.getString("email"))
+        edtAddress.setText(arguments!!.getString("alamat"))
+        if (arguments!!.getInt("kelamin").equals("perempuan")){
+            spinnerGender.setSelection(2)
+        }else{
+            spinnerGender.setSelection(1)
+        }
     }
 
     private fun initLocalDB() {
@@ -51,9 +60,7 @@ class MyFriendsAddFragment : Fragment() {
     private fun setDataSpinnerGener() {
         val adapter = ArrayAdapter.createFromResource(activity!!,
             R.array.gender_list, android.R.layout.simple_spinner_item)
-
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-
         spinnerGender.adapter = adapter
     }
     private fun validasiInput() {
@@ -72,21 +79,19 @@ class MyFriendsAddFragment : Fragment() {
 
             else -> {
 
-                val teman = MyFriend(nama = namaInput, kelamin = genderInput, email = emailInput, telp = telpInput, alamat = alamatInput)
-                tambahDataTeman(teman)
+                val teman = MyFriend(arguments!!.getString("temanid").toInt(), nama = namaInput, kelamin = genderInput, email = emailInput, telp = telpInput, alamat = alamatInput)
+                editDataTeman(teman)
 
             }
         }
 
     }
 
-    private fun tambahDataTeman(teman: MyFriend) : Job {
-
+    private fun editDataTeman(teman: MyFriend) : Job {
         return GlobalScope.launch {
-            myFriendDao?.tambahTeman(teman)
+            myFriendDao?.updateTeman(teman.temanId!!.toLong(),teman.nama,teman.kelamin,teman.email,teman.telp,teman.alamat)
             (activity as MainActivity).tampilMyFriendsFragment()
         }
-
     }
 
     private fun tampilToast(message: String) {
